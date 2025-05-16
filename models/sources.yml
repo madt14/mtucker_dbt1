@@ -5,16 +5,54 @@ sources:
       description: This is a replica of the Postgres database used by our app
       database: TIL_PORTFOLIO_PROJECTS
       schema: jaffle_shop
+      freshness: 
+        error_after:
+          count: 356
+          period: day
+        warn_after:
+          count: 365
+          period: day
+      loaded_at_field: _etl_loaded_at
+      
       tables:
           - name: customers
             description: One record per customer.
+            freshness: null
           - name: orders
             description: One record per order. Includes cancelled and deleted orders.
+            freshness: 
+              error_after:
+                count: 356
+                period: day
+              warn_after:
+                count: 365
+                period: day
+            columns:
+            - name: status
+              description: "{{doc('order_status')}}"
+              tests:
+                - accepted_values:
+                    values: ['completed','shipped','returned','return_pending','placed']
+            - name: user_id
+              tests:
+                - relationships:
+                    to: ref('stg_jaffle_shop__customers')
+                    field: customer_id
+            
           
     - name: stripe
       description: This is a replica of Stripe Orders database used by our app
       database: TIL_PORTFOLIO_PROJECTS
       schema: stripe
+      freshness: 
+        error_after:
+          count: 356
+          period: day
+        warn_after:
+          count: 365
+          period: day
+      loaded_at_field: _batched_at
+
       tables:
           - name: payment
             description: One record per transaction.
